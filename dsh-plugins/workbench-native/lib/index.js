@@ -22,7 +22,7 @@ export default class Workbench extends TypertRemoteService {
         const ref = requiredCredential(data), binding = requiredAccountBinding(data), capability = requiredCapability(data)
         let available = true
         try {
-          if (binding) available = Boolean(await this.ctx.get('oidcAccounts')?.resolveBoundCredential(binding.profileID, binding))
+          if (binding) available = await this.ctx.get('oidcAccounts')?.modelAuthorization?.(binding.profileID, binding.runtimeBaseURL) === true
           else if (ref) available = Boolean((await this.ctx.credentials.describe(ref))?.configured)
           if (capability) {
             const shared = this.ctx.get('artifactServices')
@@ -38,7 +38,7 @@ export default class Workbench extends TypertRemoteService {
     return { skills: [...skills, ...personal.skills.map(row => ({ ...row, available: true, requirement: '', removable: true }))] }
   }
   async desktop(action) {
-    if (!['status', 'check-updates', 'diagnostics', 'download-update', 'schedule-update', 'install-update','use-stable-updates','use-development-updates'].includes(action)) throw new Error('Unsupported desktop action')
+    if (!['status', 'check-updates', 'diagnostics', 'download-update', 'schedule-update', 'install-update','use-stable-updates','use-development-updates','download-content-update','restart-content-update'].includes(action)) throw new Error('Unsupported desktop action')
     const desktop = this.ctx.get('desktopServices')
     if (desktop?.workbench) return desktop.workbench(action)
     return { shell: 'web', phase: 'web', message: '浏览器用于功能验证；更新与桌面诊断请在客户端中使用。' }
